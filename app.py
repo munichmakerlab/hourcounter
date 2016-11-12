@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from datetime import datetime
+from datetime import datetime, timedelta
 from peewee import *
 
 app = Flask(__name__)
@@ -13,6 +13,21 @@ class BaseModel(Model):
 
 class Device(BaseModel):
 	name = CharField()
+
+	def getUsage(self):
+		total = CounterEntry.select(fn.Sum(CounterEntry.duration)).where(CounterEntry.device == self).scalar()
+		total_last_hour = CounterEntry.select(fn.Sum(CounterEntry.duration)).where(CounterEntry.device == self, CounterEntry.timestamp > (datetime.now() - timedelta(hours=1))).scalar() or 0
+		total_today = CounterEntry.select(fn.Sum(CounterEntry.duration)).where(CounterEntry.device == self, CounterEntry.timestamp > datetime.now().replace(hour=0, minute=0,second=0)).scalar() or 0
+
+		return {
+			"total": total,
+			"last_hour": total_last_hour,
+			"today": total_today
+		};
+
+	def lastEntry(self):
+		entry = CounterEntry.select().where(CounterEntry.device == self).order_by(CounterEntry.timestamp.desc()).get()
+		return { "timestamp": entry.timestamp, "duration": entry.duration }
 
 class CounterEntry(BaseModel):
 	device = ForeignKeyField(Device)
@@ -37,4 +52,23 @@ def getDeviceInfo(name):
 		device = Device.get(name=name)
 	except:
 		return "not found"
-	return str(CounterEntry.select(fn.Sum(CounterEntry.duration)).where(CounterEntry.device == device).scalar())
+
+	data = {
+		"device": device.name,
+		"usage": device.getUsage(),
+		"last_job": device.lastEntry()
+	}
+	return jsonify(data)
+
+@app.route("/api/device", methods=['GET'])
+def getDevicesInfo():
+	data = []
+
+	for device in Device.select():
+		data.append({
+			"device": device.name,
+			"usage": device.getUsage(),
+			"last_job": device.lastEntry()
+		});
+
+	return jsonify(data)
