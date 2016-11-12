@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import cross_origin
 from datetime import datetime, timedelta
 from peewee import *
 
@@ -47,6 +48,7 @@ def newEntry(name):
 	return "success"
 
 @app.route("/api/device/<string:name>", methods=['GET'])
+@cross_origin()
 def getDeviceInfo(name):
 	try:
 		device = Device.get(name=name)
@@ -61,6 +63,7 @@ def getDeviceInfo(name):
 	return jsonify(data)
 
 @app.route("/api/device", methods=['GET'])
+@cross_origin()
 def getDevicesInfo():
 	data = []
 
