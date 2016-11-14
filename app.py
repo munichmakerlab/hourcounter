@@ -33,7 +33,7 @@ class Device(BaseModel):
 class CounterEntry(BaseModel):
 	device = ForeignKeyField(Device)
 	duration = IntegerField()
-	timestamp = DateTimeField(default=datetime.now())
+	timestamp = DateTimeField(default=datetime.now)
 
 db.create_tables([Device, CounterEntry], True)
 
