@@ -37,6 +37,15 @@ class CounterEntry(BaseModel):
 
 db.create_tables([Device, CounterEntry], True)
 
+@app.before_request
+def before_request_handler():
+	db.connect()
+
+@app.teardown_request
+def after_request_handler():
+	if not db.is_closed():
+		db.close()
+
 @app.route("/api/device/<string:name>", methods=['PUT'])
 def newEntry(name):
 	#try:
