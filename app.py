@@ -30,6 +30,19 @@ class Device(BaseModel):
 		entry = CounterEntry.select().where(CounterEntry.device == self).order_by(CounterEntry.timestamp.desc()).get()
 		return { "timestamp": entry.timestamp, "duration": entry.duration }
 
+	def getStats(self):
+		hourly_query = CounterEntry.select(fn.Sum(CounterEntry.duration).alias('total'), fn.strftime("%H", CounterEntry.timestamp).alias('hour')).where(CounterEntry.device == self).group_by(SQL('hour'))
+		hourly = {}
+		for entry in hourly_query:
+			hourly[entry.hour] = entry.total
+
+		dow_query = CounterEntry.select(fn.Sum(CounterEntry.duration).alias('total'), fn.strftime("%w", CounterEntry.timestamp).alias('dow')).where(CounterEntry.device == self).group_by(SQL('dow'))
+		dow=  {}
+		for entry in dow_query:
+			dow[entry.dow] = entry.total
+
+		return { "hour": hourly, "dow": dow }
+
 class CounterEntry(BaseModel):
 	device = ForeignKeyField(Device)
 	duration = IntegerField()
@@ -82,5 +95,17 @@ def getDevicesInfo():
 			"usage": device.getUsage(),
 			"last_job": device.lastEntry()
 		});
+
+	return jsonify(data)
+
+@app.route("/api/device/<string:name>/stats", methods=['GET'])
+@cross_origin()
+def getDeviceStats(name):
+	try:
+		device = Device.get(name=name)
+	except:
+		return "not found"
+
+	data = device.getStats()
 
 	return jsonify(data)
