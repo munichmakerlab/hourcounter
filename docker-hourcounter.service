@@ -1,0 +1,20 @@
+[Unit]
+Description=Hourcounter, e.g. for the laser cutter
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+Restart=always
+ExecStartPre=-/usr/bin/docker kill hourcounter
+ExecStartPre=-/usr/bin/docker rm hourcounter
+ExecStart=/usr/bin/docker run -d \
+				--name=hourcounter \
+				-v /srv/hourcounter:/data \
+				-e "VIRTUAL_HOST=hourcounter,hourcounter.intern.munichmakerlab.de" \
+				munichmakerlab/hourcounter
+ExecStop=/usr/bin/docker stop -t 5 hourcounter
+#ExecStopPost=/usr/bin/docker rm hourcounter
+
+[Install]
+WantedBy=multi-user.target
