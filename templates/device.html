@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Devices: {{ device.name }}</h2>
+
+<h3>Summary</h3>
+<ul>
+	{% for key,value in device.getUsage().iteritems() %}
+		<li>{{ key }}: {{ value }}</li>
+	{% endfor %}
+</ul>
+
+<h3>Last jobs</h3>
+<ul>
+	{% for job in device.getJobs(1,10) %}
+		<li>{{ job.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}: {{ job.duration }}</li>
+	{% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>All devices</h2>
+<ul>
+	{% for device in devices %}
+		<li><a href="/device/{{ device.name }}">{{ device.name }}</a></li>
+	{% endfor %}
+</ul>
+{% endblock %}
